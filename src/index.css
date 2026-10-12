@@ -3,16 +3,41 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    color-scheme: dark;
+  }
+
   html {
     scroll-behavior: smooth;
   }
 
   body {
     font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: #000;
     color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0ms !important;
+      transition-duration: 0ms !important;
+      transition-delay: 0ms !important;
+    }
   }
 }
 
@@ -44,6 +69,28 @@
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
+  }
+}
+
+@layer components {
+  /* Sits behind the hero video: shown while the video loads, or wherever it
+     can't play. Warm stone tones from the Maroc palette. */
+  .hero-fallback {
+    background:
+      radial-gradient(55% 70% at 78% 22%, rgba(216, 207, 192, 0.55), transparent 70%),
+      radial-gradient(60% 60% at 15% 35%, rgba(150, 136, 118, 0.45), transparent 70%),
+      linear-gradient(160deg, #3d362f 0%, #6b5e50 40%, #4a4138 70%, #1c1916 100%);
+    background-size: 160% 160%;
+    animation: hero-drift 30s ease-in-out infinite alternate;
+  }
+
+  @keyframes hero-drift {
+    from {
+      background-position: 0% 0%;
+    }
+    to {
+      background-position: 100% 100%;
+    }
   }
 }
 

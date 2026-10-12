@@ -9,6 +9,7 @@ const VIDEO_URL =
 export default function Hero() {
   return (
     <section id="top" className="relative min-h-viewport w-full overflow-hidden bg-black text-white">
+      <div className="hero-fallback absolute inset-0" aria-hidden="true" />
       <video
         className="absolute inset-0 h-full w-full object-cover"
         src={VIDEO_URL}

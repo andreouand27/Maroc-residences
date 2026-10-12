@@ -73,23 +73,82 @@
 }
 
 @layer components {
-  /* Sits behind the hero video: shown while the video loads, or wherever it
-     can't play. Warm stone tones from the Maroc palette. */
-  .hero-fallback {
-    background:
-      radial-gradient(55% 70% at 78% 22%, rgba(216, 207, 192, 0.55), transparent 70%),
-      radial-gradient(60% 60% at 15% 35%, rgba(150, 136, 118, 0.45), transparent 70%),
-      linear-gradient(160deg, #3d362f 0%, #6b5e50 40%, #4a4138 70%, #1c1916 100%);
-    background-size: 160% 160%;
-    animation: hero-drift 30s ease-in-out infinite alternate;
+  /* The hero render (shown behind the video, and wherever the video can't
+     play) settles into place on load. */
+  .hero-image {
+    animation: hero-settle 2400ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  @keyframes hero-drift {
+  @keyframes hero-settle {
     from {
-      background-position: 0% 0%;
+      opacity: 0;
+      transform: scale(1.08);
     }
     to {
-      background-position: 100% 100%;
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Scroll reveals: content rises into place, images open out from a
+     slightly inset frame while the picture settles. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition:
+      opacity 1000ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 1000ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  .reveal-image {
+    opacity: 0;
+    clip-path: inset(6% 6% 6% 6% round 0.75rem);
+    transition:
+      opacity 900ms ease,
+      clip-path 1400ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .reveal-image img {
+    transform: scale(1.15);
+    transition: transform 1800ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .reveal-image.is-visible {
+    opacity: 1;
+    clip-path: inset(0 round 0.75rem);
+  }
+
+  .reveal-image.is-visible img {
+    transform: scale(1);
+  }
+
+  .lightbox-image {
+    animation: lightbox-in 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes lightbox-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal,
+    .reveal-image,
+    .reveal-image img {
+      opacity: 1;
+      transform: none;
+      clip-path: none;
     }
   }
 }

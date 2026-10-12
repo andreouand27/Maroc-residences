@@ -2,6 +2,7 @@ import Apartments from './components/Apartments'
 import Contact from './components/Contact'
 import Features from './components/Features'
 import Footer from './components/Footer'
+import Gallery from './components/Gallery'
 import Hero from './components/Hero'
 import Project from './components/Project'
 
@@ -13,6 +14,7 @@ export default function App() {
         <Project />
         <Apartments />
         <Features />
+        <Gallery />
         <Contact />
       </main>
       <Footer />

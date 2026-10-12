@@ -12,8 +12,50 @@ export const site = {
 export const navLinks = [
   { label: 'Project', href: '#project' },
   { label: 'Apartments', href: '#apartments' },
-  { label: 'Features', href: '#features' },
+  { label: 'Gallery', href: '#gallery' },
   { label: 'Contact', href: '#contact' },
+]
+
+export type SiteImage = {
+  /** Full-size render. */
+  src: string
+  /** Smaller copy for gallery tiles. */
+  thumb: string
+  alt: string
+}
+
+const render = (name: string, alt: string): SiteImage => ({
+  src: `images/${name}.webp`,
+  thumb: `images/gallery/${name}.webp`,
+  alt,
+})
+
+export const images = {
+  frontDusk: render('front-dusk', 'Alba Residences from the street at dusk, with the lit entrance and stone sign'),
+  streetCorner: render('street-corner', 'Corner view of the building from the street on a sunny evening'),
+  balconiesCorner: render(
+    'balconies-corner',
+    'Corner of the building with deep balconies, glass railings and covered parking below',
+  ),
+  entrance: render(
+    'entrance',
+    'Landscaped entrance with stone planters, garden lighting and the Alba Residences by Maroc sign',
+  ),
+  sideElevation: render('side-elevation', 'Side of the building with sliding metal screens above the covered parking'),
+  fullElevation: render('full-elevation', 'Both floors of apartments raised above the covered parking'),
+  parkingCorner: render('parking-corner', 'The building raised on columns above covered parking'),
+  sideDusk: render('side-dusk', 'Side of the building lit up at dusk'),
+}
+
+export const gallery: SiteImage[] = [
+  images.frontDusk,
+  images.streetCorner,
+  images.balconiesCorner,
+  images.entrance,
+  images.sideElevation,
+  images.fullElevation,
+  images.parkingCorner,
+  images.sideDusk,
 ]
 
 export const apartments = [

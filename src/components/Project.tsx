@@ -1,4 +1,6 @@
-import { availableApartments, site, totalApartments } from '../site'
+import { availableApartments, images, site, totalApartments } from '../site'
+import Reveal from './Reveal'
+import RevealImage from './RevealImage'
 import SectionHeading from './SectionHeading'
 
 const facts = [
@@ -18,8 +20,8 @@ const facts = [
 export default function Project() {
   return (
     <section id="project" className="scroll-mt-6 px-6 py-24 md:px-12 lg:px-16 lg:py-32">
-      <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-16">
-        <div>
+      <div className="lg:grid lg:grid-cols-2 lg:items-end lg:gap-16">
+        <Reveal>
           <SectionHeading eyebrow={`The project · ${site.location}`} title={site.project}>
             <div className="space-y-5">
               <p>
@@ -31,26 +33,26 @@ export default function Project() {
                 give shade and privacy whenever you want it. The two top-floor apartments each have a private roof
                 garden.
               </p>
-              <p>
-                You arrive through a landscaped entrance with stone planters, olive trees and garden lighting,
-                marked by a stone “Alba Residences by Maroc” sign.
-              </p>
             </div>
           </SectionHeading>
-        </div>
+        </Reveal>
 
-        <dl className="liquid-glass mt-12 rounded-xl border border-white/20 px-6 lg:mt-0">
-          {facts.map((fact) => (
-            <div
-              key={fact.label}
-              className="flex flex-col gap-1 border-b border-white/10 py-5 last:border-b-0 sm:flex-row sm:justify-between sm:gap-6"
-            >
-              <dt className="text-sm text-gray-300">{fact.label}</dt>
-              <dd className="sm:text-right">{fact.value}</dd>
-            </div>
-          ))}
-        </dl>
+        <Reveal delay={150} className="mt-12 lg:mt-0">
+          <dl className="border-t border-white/10">
+            {facts.map((fact) => (
+              <div
+                key={fact.label}
+                className="flex flex-col gap-1 border-b border-white/10 py-4 sm:flex-row sm:justify-between sm:gap-6"
+              >
+                <dt className="text-sm text-gray-300">{fact.label}</dt>
+                <dd className="sm:text-right">{fact.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </Reveal>
       </div>
+
+      <RevealImage image={images.streetCorner} className="mt-16 aspect-[4/3] md:aspect-[21/9] lg:mt-20" />
     </section>
   )
 }

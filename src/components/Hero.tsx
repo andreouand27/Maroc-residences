@@ -1,4 +1,4 @@
-import { site } from '../site'
+import { images, site } from '../site'
 import AnimatedHeading from './AnimatedHeading'
 import FadeIn from './FadeIn'
 import Navbar from './Navbar'
@@ -9,7 +9,13 @@ const VIDEO_URL =
 export default function Hero() {
   return (
     <section id="top" className="relative min-h-viewport w-full overflow-hidden bg-black text-white">
-      <div className="hero-fallback absolute inset-0" aria-hidden="true" />
+      {/* The render shows while the video loads, and wherever it can't play. */}
+      <img
+        src={images.frontDusk.src}
+        alt=""
+        fetchPriority="high"
+        className="hero-image absolute inset-0 h-full w-full object-cover"
+      />
       <video
         className="absolute inset-0 h-full w-full object-cover"
         src={VIDEO_URL}
@@ -25,7 +31,8 @@ export default function Hero() {
 
         <div className="flex flex-1 flex-col justify-end px-6 pb-12 md:px-12 lg:px-16 lg:pb-16">
           <div className="lg:grid lg:grid-cols-2 lg:items-end">
-            <div>
+            {/* A soft shadow keeps the text readable over bright parts of the background. */}
+            <div className="[text-shadow:0_2px_24px_rgba(0,0,0,0.4)]">
               <AnimatedHeading
                 text={'Your new home\nin Archangelos.'}
                 className="mb-4 text-4xl font-normal md:text-5xl lg:text-6xl xl:text-7xl"

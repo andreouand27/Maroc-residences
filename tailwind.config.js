@@ -6,6 +6,10 @@ export default {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
       },
+      colors: {
+        // Taupe from the Maroc Residences logo.
+        taupe: '#b8aa98',
+      },
     },
   },
   plugins: [],

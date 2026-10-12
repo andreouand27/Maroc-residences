@@ -1,3 +1,5 @@
+import { AirVent, Blinds, Car, CookingPot, Sun, Trees, type LucideIcon } from 'lucide-react'
+
 export const site = {
   company: 'Maroc Residences',
   project: 'Alba Residences by Maroc',
@@ -8,13 +10,6 @@ export const site = {
   email: 'marocresidences27@gmail.com',
   construction: 'Starts November 2026',
 }
-
-export const navLinks = [
-  { label: 'Project', href: '#project' },
-  { label: 'Apartments', href: '#apartments' },
-  { label: 'Gallery', href: '#gallery' },
-  { label: 'Contact', href: '#contact' },
-]
 
 export type SiteImage = {
   /** Full-size render. */
@@ -82,11 +77,15 @@ export const apartments = [
 export const totalApartments = apartments.reduce((sum, apartment) => sum + apartment.count, 0)
 export const availableApartments = apartments.reduce((sum, apartment) => sum + apartment.available, 0)
 
-export const features = [
-  { title: 'Covered parking', description: 'Covered parking for every apartment, beneath the building.' },
-  { title: 'Deep balconies', description: 'Generous balconies with glass railings.' },
-  { title: 'Sliding screens', description: 'Sliding dark metal screens for shade and privacy.' },
-  { title: 'Private roof gardens', description: 'The two top-floor apartments each have their own roof garden.' },
-  { title: 'Kitchen included', description: 'Apartments come with the kitchen included.' },
-  { title: 'Air conditioning', description: 'Apartments come with air conditioning.' },
+export const features: { title: string; description: string; icon: LucideIcon }[] = [
+  { title: 'Covered parking', description: 'Covered parking for every apartment, beneath the building.', icon: Car },
+  { title: 'Deep balconies', description: 'Generous balconies with glass railings.', icon: Sun },
+  { title: 'Sliding screens', description: 'Sliding dark metal screens for shade and privacy.', icon: Blinds },
+  {
+    title: 'Private roof gardens',
+    description: 'The two top-floor apartments each have their own roof garden.',
+    icon: Trees,
+  },
+  { title: 'Kitchen included', description: 'Apartments come with the kitchen included.', icon: CookingPot },
+  { title: 'Air conditioning', description: 'Apartments come with air conditioning.', icon: AirVent },
 ]

@@ -3,6 +3,12 @@ import { useEffect, useState, type CSSProperties } from 'react'
 type AnimatedHeadingProps = {
   /** Heading text; `\n` starts a new line. */
   text: string
+  as?: 'h1' | 'h2'
+  /**
+   * `slide`: characters fade in from the left (the hero).
+   * `rise`: characters swing up into place from behind a mask.
+   */
+  variant?: 'slide' | 'rise'
   className?: string
   style?: CSSProperties
   /** Milliseconds before the first character starts animating. */
@@ -11,6 +17,8 @@ type AnimatedHeadingProps = {
   charDelay?: number
   /** Transition length of each character in milliseconds. */
   duration?: number
+  /** The animation starts when this turns true; turning it false hides the text again. */
+  play?: boolean
 }
 
 type Char = { char: string; index: number }
@@ -26,40 +34,61 @@ function splitWords(chars: string[]): Char[][] {
   return words.filter((word) => word.length > 0)
 }
 
+const hidden = {
+  slide: { opacity: 0, transform: 'translateX(-18px)' },
+  rise: { opacity: 1, transform: 'translateY(110%) rotate(10deg)' },
+}
+const shown = {
+  slide: { opacity: 1, transform: 'translateX(0)' },
+  rise: { opacity: 1, transform: 'translateY(0) rotate(0deg)' },
+}
+
 export default function AnimatedHeading({
   text,
+  as: Tag = 'h1',
+  variant = 'slide',
   className = '',
   style,
   initialDelay = 200,
   charDelay = 30,
   duration = 500,
+  play = true,
 }: AnimatedHeadingProps) {
   const [animate, setAnimate] = useState(false)
 
   useEffect(() => {
+    if (!play) return
     const timer = setTimeout(() => setAnimate(true), initialDelay)
-    return () => clearTimeout(timer)
-  }, [initialDelay])
+    return () => {
+      clearTimeout(timer)
+      setAnimate(false)
+    }
+  }, [initialDelay, play])
 
   const lines = text.split('\n')
+  const state = animate ? shown[variant] : hidden[variant]
 
   return (
-    <h1 className={className} style={style} aria-label={lines.join(' ')}>
+    <Tag className={className} style={style} aria-label={lines.join(' ')}>
       {lines.map((line, lineIndex) => {
         const chars = Array.from(line)
         return (
-          <span key={lineIndex} className="block" aria-hidden="true">
+          <span
+            key={lineIndex}
+            className={variant === 'rise' ? '-mb-[0.12em] block overflow-hidden pb-[0.12em]' : 'block'}
+            aria-hidden="true"
+          >
             {splitWords(chars).map((word, wordIndex) => (
               <span key={wordIndex} className="inline-block whitespace-nowrap">
                 {word.map(({ char, index }) => (
                   <span
                     key={index}
-                    className="inline-block"
+                    className="anim-char inline-block origin-bottom-left"
                     style={{
-                      opacity: animate ? 1 : 0,
-                      transform: animate ? 'translateX(0)' : 'translateX(-18px)',
+                      ...state,
                       transitionProperty: 'opacity, transform',
                       transitionDuration: `${duration}ms`,
+                      transitionTimingFunction: variant === 'rise' ? 'cubic-bezier(0.22, 1, 0.36, 1)' : undefined,
                       transitionDelay: `${lineIndex * chars.length * charDelay + index * charDelay}ms`,
                     }}
                   >
@@ -71,6 +100,6 @@ export default function AnimatedHeading({
           </span>
         )
       })}
-    </h1>
+    </Tag>
   )
 }

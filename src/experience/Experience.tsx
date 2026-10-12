@@ -10,6 +10,7 @@ import ProjectScene from '../scenes/ProjectScene'
 import SplashScene from '../scenes/SplashScene'
 import { gallery } from '../site'
 import { effects, type Direction, type EffectName } from './effects'
+import { prefersReducedMotion } from './motion'
 import { sceneIndex, scenes, type SceneId } from './scenes'
 
 type Transition = {
@@ -191,8 +192,7 @@ export default function Experience() {
 
     const animations: Animation[] = []
     const timers: number[] = []
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const run = effects[reduceMotion ? 'fade' : transition.effect]
+    const run = effects[prefersReducedMotion() ? 'fade' : transition.effect]
     let revealedEarly = false
     const reveal = () => {
       if (revealedEarly) return

@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react'
+import { prefersReducedMotion } from '../experience/motion'
 
 type AnimatedHeadingProps = {
   /** Heading text; `\n` starts a new line. */
@@ -58,7 +59,7 @@ export default function AnimatedHeading({
 
   useEffect(() => {
     if (!play) return
-    const timer = setTimeout(() => setAnimate(true), initialDelay)
+    const timer = setTimeout(() => setAnimate(true), prefersReducedMotion() ? 0 : initialDelay)
     return () => {
       clearTimeout(timer)
       setAnimate(false)

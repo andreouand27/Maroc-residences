@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { prefersReducedMotion } from '../experience/motion'
 
 type FadeInProps = {
   children: ReactNode
@@ -16,7 +17,8 @@ export default function FadeIn({ children, delay = 0, duration = 1000, play = tr
 
   useEffect(() => {
     if (!play) return
-    const timer = setTimeout(() => setVisible(true), delay)
+    // With reduced motion, show the content straight away.
+    const timer = setTimeout(() => setVisible(true), prefersReducedMotion() ? 0 : delay)
     return () => {
       clearTimeout(timer)
       setVisible(false)

@@ -1,0 +1,366 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-in-out: cubic-bezier(0.76, 0, 0.24, 1);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* The site is a stage of full-screen scenes, so the page itself never scrolls. */
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #000;
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0ms !important;
+      transition-delay: 0ms !important;
+    }
+  }
+}
+
+/* Kept in the components layer so utilities such as `border border-white/20`
+   still apply on top of `border: none`. */
+@layer components {
+  .liquid-glass {
+    background: rgba(0, 0, 0, 0.4);
+    background-blend-mode: luminosity;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: none;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .liquid-glass::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.4px;
+    background: linear-gradient(180deg,
+      rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 20%,
+      rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%,
+      rgba(255,255,255,0.1) 80%, rgba(255,255,255,0.3) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Denser glass for panels that carry more text. */
+  .glass-strong {
+    background: rgba(8, 7, 6, 0.55);
+    backdrop-filter: blur(18px) saturate(115%);
+    -webkit-backdrop-filter: blur(18px) saturate(115%);
+  }
+}
+
+@layer components {
+  /* ---- Scene entrances ----------------------------------------------------
+     A scene's content starts hidden and plays in once its section gets
+     `.is-active`. `--i` (set with `order()`) staggers siblings. */
+
+  .scene-item {
+    opacity: 0;
+    transform: translate3d(0, 36px, 0);
+    filter: blur(10px);
+    transition:
+      opacity 900ms var(--ease-out),
+      transform 1100ms var(--ease-out),
+      filter 900ms var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 90ms + 120ms);
+  }
+
+  .is-active .scene-item {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+
+  /* Panels slide in from the left while unmasking. */
+  .scene-panel {
+    opacity: 0;
+    transform: translate3d(-48px, 0, 0) scale(0.97);
+    clip-path: inset(0 100% 0 0 round 1rem);
+    transition:
+      opacity 700ms var(--ease-out),
+      transform 1200ms var(--ease-out),
+      clip-path 1200ms var(--ease-in-out);
+  }
+
+  .is-active .scene-panel {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0 0 0 0 round 1rem);
+  }
+
+  /* Cards tip up from below, one after another. */
+  .scene-card {
+    opacity: 0;
+    transform: perspective(900px) translate3d(0, 60px, 0) rotateX(-35deg);
+    transform-origin: 50% 100%;
+    transition:
+      opacity 800ms var(--ease-out),
+      transform 1200ms var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 110ms + 300ms);
+  }
+
+  .is-active .scene-card {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Tiles swing open like doors. */
+  .scene-tile {
+    opacity: 0;
+    transform: perspective(800px) rotateY(-80deg) scale(0.9);
+    transform-origin: 0 50%;
+    transition:
+      opacity 600ms var(--ease-out),
+      transform 1100ms var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 80ms + 350ms);
+  }
+
+  .is-active .scene-tile {
+    opacity: 1;
+    transform: none;
+  }
+
+  .eyebrow-line {
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 900ms var(--ease-out) 200ms;
+  }
+
+  .is-active .eyebrow-line {
+    transform: scaleX(1);
+  }
+
+  /* Leaving: everything clears quickly, ahead of the transition. */
+  .is-leaving :is(.scene-item, .scene-panel, .scene-card, .scene-tile, .eyebrow-line, .fade-in, .anim-char) {
+    transition-duration: 260ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  /* ---- Mouse parallax ------------------------------------------------------
+     `--px` and `--py` (-1 to 1) are set on the stage as the mouse moves. */
+
+  .scene-parallax {
+    transform: translate3d(calc(var(--px, 0) * -16px), calc(var(--py, 0) * -10px), 0);
+    transition: transform 1200ms var(--ease-out);
+  }
+
+  .scene-float {
+    transform: translate3d(calc(var(--px, 0) * 8px), calc(var(--py, 0) * 5px), 0);
+    transition: transform 1200ms var(--ease-out);
+  }
+
+  /* ---- Splash ----------------------------------------------------------- */
+
+  /* The building rises from the ground line while a scan line sweeps up it. */
+  .splash-mark {
+    clip-path: inset(100% 0 0 0);
+    transition: clip-path 1800ms var(--ease-in-out) 200ms;
+  }
+
+  .is-active .splash-mark {
+    clip-path: inset(0 0 0 0);
+  }
+
+  .splash-scan {
+    position: absolute;
+    left: -12%;
+    right: -12%;
+    top: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #b8aa98, transparent);
+    box-shadow: 0 0 12px rgba(184, 170, 152, 0.8);
+    opacity: 0;
+  }
+
+  .is-active .splash-scan {
+    animation: splash-scan 1800ms var(--ease-in-out) 200ms both;
+  }
+
+  @keyframes splash-scan {
+    0% {
+      top: 100%;
+      opacity: 1;
+    }
+    85% {
+      opacity: 1;
+    }
+    100% {
+      top: 0%;
+      opacity: 0;
+    }
+  }
+
+  .splash-word {
+    opacity: 0;
+    filter: blur(14px);
+    transform: translateY(16px) scale(0.98);
+    transition:
+      opacity 1200ms ease 1100ms,
+      filter 1200ms ease 1100ms,
+      transform 1400ms var(--ease-out) 1100ms;
+  }
+
+  .is-active .splash-word {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
+
+  .splash-prompt {
+    opacity: 0;
+    transition: opacity 900ms ease 2100ms;
+  }
+
+  /* Returning to the splash: the logo is already built. */
+  [data-instant] :is(.splash-mark, .splash-word) {
+    transition: none;
+  }
+
+  [data-instant] .splash-scan {
+    animation: none;
+  }
+
+  [data-instant] .splash-prompt {
+    transition-delay: 900ms;
+  }
+
+  .is-active .splash-prompt {
+    opacity: 1;
+  }
+
+  .splash-pulse {
+    animation: splash-pulse 2400ms ease-in-out infinite;
+  }
+
+  @keyframes splash-pulse {
+    50% {
+      opacity: 0.55;
+    }
+  }
+
+  /* Faint architect's grid drifting behind the logo. */
+  .splash-grid {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 64px 64px;
+    -webkit-mask-image: radial-gradient(ellipse at center, #000 15%, transparent 70%);
+    mask-image: radial-gradient(ellipse at center, #000 15%, transparent 70%);
+    opacity: 0;
+    transition: opacity 2000ms ease;
+    animation: splash-grid 24s linear infinite;
+  }
+
+  .is-active .splash-grid {
+    opacity: 1;
+  }
+
+  @keyframes splash-grid {
+    to {
+      background-position: 64px 64px;
+    }
+  }
+
+  .splash-glow {
+    background: radial-gradient(circle, rgba(184, 170, 152, 0.22), transparent 62%);
+    animation: splash-glow 6s ease-in-out infinite alternate;
+  }
+
+  @keyframes splash-glow {
+    to {
+      opacity: 0.5;
+      transform: translate(-50%, -50%) scale(1.15);
+    }
+  }
+
+  /* ---- Gallery: the new picture wipes across the old one ----------------- */
+
+  .gallery-next {
+    animation: gallery-next 1100ms var(--ease-in-out) both;
+  }
+
+  .gallery-prev {
+    animation: gallery-prev 1100ms var(--ease-in-out) both;
+  }
+
+  @keyframes gallery-next {
+    from {
+      clip-path: inset(0 0 0 100%);
+      transform: scale(1.15);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+      transform: scale(1);
+    }
+  }
+
+  @keyframes gallery-prev {
+    from {
+      clip-path: inset(0 100% 0 0);
+      transform: scale(1.15);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+      transform: scale(1);
+    }
+  }
+
+  .hint-nudge {
+    animation: hint-nudge 1800ms ease-in-out infinite;
+  }
+
+  @keyframes hint-nudge {
+    50% {
+      transform: translateY(3px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :is(.scene-item, .scene-panel, .scene-card, .scene-tile, .splash-word, .splash-mark),
+    .is-active :is(.scene-item, .scene-panel, .scene-card, .scene-tile, .splash-word, .splash-mark) {
+      transform: none;
+      filter: none;
+      clip-path: none;
+    }
+
+    .scene-parallax,
+    .scene-float {
+      transform: none;
+    }
+  }
+}

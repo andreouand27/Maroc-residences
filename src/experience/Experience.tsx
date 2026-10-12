@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 import Controls from '../components/Controls'
 import Navbar from '../components/Navbar'
 import ApartmentsScene from '../scenes/ApartmentsScene'
@@ -51,20 +59,23 @@ function pickEffect(from: number, to: number, direction: Direction): EffectName 
   return direction > 0 ? scenes[to].enter : scenes[from].enter
 }
 
-// True when the event happened inside something that can still scroll that way,
-// so the gesture belongs to it rather than to scene changes.
-function insideScrollable(target: EventTarget | null, deltaY: number) {
+// The nearest panel around `target` that scrolls vertically, if any.
+function scrollableParent(target: EventTarget | null) {
   let element = target instanceof Element ? target : null
   while (element && element !== document.body) {
     if (element instanceof HTMLElement && element.scrollHeight > element.clientHeight + 1) {
       const { overflowY } = getComputedStyle(element)
-      if (overflowY === 'auto' || overflowY === 'scroll') {
-        if (deltaY > 0 && element.scrollTop + element.clientHeight < element.scrollHeight - 1) return true
-        if (deltaY < 0 && element.scrollTop > 0) return true
-      }
+      if (overflowY === 'auto' || overflowY === 'scroll') return element
     }
     element = element.parentElement
   }
+  return null
+}
+
+// Whether `element`, scrolled to `scrollTop`, can still scroll in the direction of deltaY.
+function canScroll(element: HTMLElement, scrollTop: number, deltaY: number) {
+  if (deltaY > 0) return scrollTop + element.clientHeight < element.scrollHeight - 1
+  if (deltaY < 0) return scrollTop > 0
   return false
 }
 
@@ -297,7 +308,10 @@ export default function Experience() {
       }
       gesture.last = event.timeStamp
       if (busy.current) gesture.armed = false
-      if (!gesture.armed || insideScrollable(event.target, event.deltaY)) return
+      const panel = scrollableParent(event.target)
+      // A gesture that scrolls a panel belongs to the panel, even after it reaches the end.
+      if (panel && canScroll(panel, panel.scrollTop, event.deltaY)) gesture.armed = false
+      if (!gesture.armed) return
       gesture.total += event.deltaY
       if (Math.abs(gesture.total) < WHEEL_DISTANCE) return
       gesture.armed = false
@@ -310,19 +324,34 @@ export default function Experience() {
 
   // Touch: swipe up or left for next, down or right for back; sideways browses the gallery.
   useEffect(() => {
-    let start: { x: number; y: number; target: EventTarget | null } | null = null
+    type TouchStart = { x: number; y: number; target: EventTarget | null; panel: HTMLElement | null; scrollTop: number }
+    let start: TouchStart | null = null
     const onTouchStart = (event: TouchEvent) => {
-      start = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY, target: event.target } : null
+      if (event.touches.length !== 1) {
+        start = null
+        return
+      }
+      const panel = scrollableParent(event.target)
+      start = {
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY,
+        target: event.target,
+        panel,
+        scrollTop: panel?.scrollTop ?? 0,
+      }
     }
     const onTouchEnd = (event: TouchEvent) => {
       if (!start) return
       const dx = event.changedTouches[0].clientX - start.x
       const dy = event.changedTouches[0].clientY - start.y
+      const { panel, scrollTop } = start
       const target = start.target instanceof Element ? start.target : null
       start = null
       if (Math.max(Math.abs(dx), Math.abs(dy)) < SWIPE_DISTANCE) return
       if (Math.abs(dy) > Math.abs(dx)) {
-        if (insideScrollable(target, -dy)) return
+        // Judge by where the panel was when the finger went down: by now the
+        // browser may already have scrolled it to the end.
+        if (panel && canScroll(panel, scrollTop, -dy)) return
         if (dy < 0) next()
         else previous()
       } else {
@@ -351,6 +380,14 @@ export default function Experience() {
 
   const onPointerDown = (event: ReactPointerEvent) => {
     lastPointer.current = { x: event.clientX, y: event.clientY, time: performance.now() }
+  }
+
+  // Clicking a button or link with the mouse still works, but leaves keyboard
+  // focus where it was, so Space and Enter keep moving between scenes.
+  const onMouseDown = (event: ReactMouseEvent) => {
+    if (event.button === 0 && event.target instanceof Element && event.target.closest('button, a')) {
+      event.preventDefault()
+    }
   }
 
   const shown = transition ? [transition.from, transition.to].sort((a, b) => a - b) : [current]
@@ -389,6 +426,7 @@ export default function Experience() {
       className="fixed inset-0 overflow-hidden bg-black font-sans text-white"
       onPointerMove={onPointerMove}
       onPointerDown={onPointerDown}
+      onMouseDown={onMouseDown}
     >
       {shown.map((index) => {
         const scene = scenes[index]

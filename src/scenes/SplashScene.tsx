@@ -37,19 +37,21 @@ export default function SplashScene({ onEnter }: SplashSceneProps) {
         />
       </h1>
 
-      <button
-        type="button"
-        onClick={(event) => {
-          event.stopPropagation()
-          onEnter()
-        }}
-        className="splash-prompt liquid-glass relative mt-14 rounded-full short:mt-6 border border-white/20 px-6 py-3 text-sm transition-colors hover:bg-white/15"
-      >
-        <span className="splash-pulse flex items-center gap-2 [@media(pointer:coarse)]:hidden">
-          Press <Key>Enter</Key> or <Key>Space</Key> to enter
-        </span>
-        <span className="splash-pulse hidden [@media(pointer:coarse)]:inline">Tap to enter</span>
-      </button>
+      <div className="splash-prompt mt-14 short:mt-6">
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            onEnter()
+          }}
+          className="liquid-glass relative rounded-full border border-white/20 px-6 py-3 text-sm transition-colors hover:bg-white/15"
+        >
+          <span className="splash-pulse flex items-center gap-2 [@media(pointer:coarse)]:hidden">
+            Press <Key>Enter</Key> or <Key>Space</Key> to enter
+          </span>
+          <span className="splash-pulse hidden [@media(pointer:coarse)]:inline">Tap to enter</span>
+        </button>
+      </div>
 
       <p className="splash-prompt absolute bottom-[calc(2rem+var(--safe-bottom))] px-6 text-center text-xs text-gray-300">
         {site.project} · {site.location}

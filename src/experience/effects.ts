@@ -168,7 +168,7 @@ function rings(ctx: EffectContext, x: number, y: number, radius: number, timing:
 
 // Splash ⇄ scene: fly into the logo while the scene opens out of it.
 const portal: Effect = async (ctx) => {
-  const { stage, from, to, fromId, animate, revealAfter } = ctx
+  const { stage, from, to, fromId, animate, reveal, revealAfter } = ctx
   const { width, height } = size(stage)
   const entering = fromId === 'splash'
   const splash = entering ? from : to
@@ -215,6 +215,10 @@ const portal: Effect = async (ctx) => {
     animations.push(...rings(ctx, x, y, radius, timing))
     revealAfter(1250)
   } else {
+    // Show the splash in its finished state straight away (skipping its
+    // build-up) so the logo can be seen flying back into place.
+    splash.dataset.instant = ''
+    reveal()
     const timing = { duration: 1200, easing: EASE.reveal }
     animations.push(animate(scene, [{ clipPath: circle(radius) }, { clipPath: circle(0) }], timing))
     if (motion) animations.push(animate(motion, [{ transform: 'none' }, { transform: 'scale(1.4)' }], timing))
@@ -230,7 +234,6 @@ const portal: Effect = async (ctx) => {
         ),
       )
     }
-    revealAfter(900)
   }
   await settle(animations)
 }

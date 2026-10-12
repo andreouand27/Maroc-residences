@@ -246,6 +246,19 @@
     transition: opacity 900ms ease 2100ms;
   }
 
+  /* Returning to the splash: the logo is already built. */
+  [data-instant] :is(.splash-mark, .splash-word) {
+    transition: none;
+  }
+
+  [data-instant] .splash-scan {
+    animation: none;
+  }
+
+  [data-instant] .splash-prompt {
+    transition-delay: 900ms;
+  }
+
   .is-active .splash-prompt {
     opacity: 1;
   }

@@ -10,7 +10,7 @@ type EyebrowProps = {
 export default function Eyebrow({ children, step = 0 }: EyebrowProps) {
   return (
     <p
-      className="scene-item mb-4 flex items-center gap-3 text-xs font-medium uppercase tracking-[0.3em] text-taupe"
+      className="scene-item mb-3 flex items-center md:mb-4 short:mb-2 gap-3 text-xs font-medium uppercase tracking-[0.3em] text-taupe"
       style={order(step)}
     >
       {/* The rule echoes the lines either side of "RESIDENCES" in the logo. */}

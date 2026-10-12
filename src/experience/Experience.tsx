@@ -31,10 +31,18 @@ const WHEEL_GESTURE_GAP = 220
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
+const decoded = new Map<string, Promise<void>>()
+
+/** Downloads and decodes a picture once; later calls reuse the same promise. */
 function preload(src: string) {
-  const image = new Image()
-  image.src = src
-  return image.decode().catch(() => undefined)
+  let promise = decoded.get(src)
+  if (!promise) {
+    const image = new Image()
+    image.src = src
+    promise = image.decode().catch(() => undefined)
+    decoded.set(src, promise)
+  }
+  return promise
 }
 
 function pickEffect(from: number, to: number, direction: Direction): EffectName {
@@ -98,7 +106,10 @@ export default function Experience() {
 
   // Fetch every picture up front so transitions never wait on the network.
   useEffect(() => {
-    for (const image of gallery) preload(image.src)
+    for (const image of gallery) {
+      preload(image.src)
+      preload(image.thumb)
+    }
     for (const name of ['logo-mark', 'logo-wordmark']) preload(`images/${name}.webp`)
   }, [])
 
@@ -121,7 +132,7 @@ export default function Experience() {
       setGalleryState((state) => ({ ...state, previous: null }))
     }
     const image = scenes[target].id === 'gallery' ? gallery[galleryRef.current.index].src : scenes[target].image
-    if (image) await Promise.race([preload(image), wait(700)])
+    if (image) await Promise.race([preload(image), wait(400)])
 
     setRevealed(false)
     setTransition({ from, to: target, direction, effect, origin })
@@ -163,12 +174,31 @@ export default function Experience() {
     const toId = scenes[transition.to].id
     const from = sceneElements.current.get(fromId)
     const to = sceneElements.current.get(toId)
-    if (!stage || !overlay || !from || !to) return
+    const finish = () => {
+      // Update the ref before accepting input again: the effect that syncs it
+      // runs later, and a held key would otherwise replay this transition.
+      currentRef.current = transition.to
+      setCurrent(transition.to)
+      setTransition(null)
+      setRevealed(true)
+      setAnnouncement(`${scenes[transition.to].label}, ${transition.to + 1} of ${scenes.length}`)
+      busy.current = false
+    }
+    if (!stage || !overlay || !from || !to) {
+      finish()
+      return
+    }
 
     const animations: Animation[] = []
+    const timers: number[] = []
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const run = effects[reduceMotion ? 'fade' : transition.effect]
     let revealedEarly = false
+    const reveal = () => {
+      if (revealedEarly) return
+      revealedEarly = true
+      setRevealed(true)
+    }
 
     run({
       stage,
@@ -179,10 +209,9 @@ export default function Experience() {
       toId,
       direction: transition.direction,
       origin: transition.origin,
-      reveal: () => {
-        if (revealedEarly) return
-        revealedEarly = true
-        setRevealed(true)
+      reveal,
+      revealAfter: (ms) => {
+        timers.push(window.setTimeout(reveal, ms))
       },
       animate: (element, keyframes, options) => {
         const animation = element.animate(keyframes, { fill: 'both', ...options })
@@ -192,6 +221,7 @@ export default function Experience() {
     })
       .catch(() => undefined)
       .then(() => {
+        for (const timer of timers) clearTimeout(timer)
         // Hide the outgoing scene before cancelling, so it can't reappear for a frame.
         from.style.visibility = 'hidden'
         for (const animation of animations) animation.cancel()
@@ -199,11 +229,7 @@ export default function Experience() {
         overlay.removeAttribute('style')
         stage.style.perspective = ''
         to.removeAttribute('style')
-        setCurrent(transition.to)
-        setTransition(null)
-        setRevealed(true)
-        setAnnouncement(`${scenes[transition.to].label}, ${transition.to + 1} of ${scenes.length}`)
-        busy.current = false
+        finish()
         to.focus({ preventScroll: true })
       })
   }, [transition])

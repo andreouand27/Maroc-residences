@@ -19,8 +19,8 @@ export default function Controls({ current, visible, onNavigate, onNext }: Contr
   return (
     <div inert={!visible} className={`transition-opacity duration-700 ${visible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
       {/* Progress down the right edge, from tablet width up. */}
-      <nav aria-label="Sections" className="fixed right-5 top-1/2 z-50 hidden -translate-y-1/2 flex-col items-end md:flex">
-        <p className="mb-3 text-xs tabular-nums text-gray-300">
+      <nav aria-label="Sections" className="fixed right-4 top-1/2 z-50 hidden -translate-y-1/2 flex-col items-end md:flex">
+        <p className="mb-2 text-[10px] tabular-nums text-gray-300">
           {String(step).padStart(2, '0')} / {String(steps.length).padStart(2, '0')}
         </p>
         {steps.map((scene, index) => {
@@ -51,7 +51,7 @@ export default function Controls({ current, visible, onNavigate, onNext }: Contr
       <button
         type="button"
         onClick={onNext}
-        className="fixed bottom-[calc(0.75rem+var(--safe-bottom))] left-1/2 z-50 flex -translate-x-1/2 flex-col items-center gap-2 rounded-full px-4 py-1.5 text-xs text-gray-300 transition-colors hover:text-white"
+        className="fixed bottom-[calc(0.75rem+var(--safe-bottom))] left-1/2 short:bottom-[calc(0.25rem+var(--safe-bottom))] z-50 flex w-max -translate-x-1/2 flex-col items-center gap-1.5 rounded-full px-4 py-1 text-xs text-gray-300 md:gap-2 md:py-1.5 transition-colors hover:text-white"
       >
         <span className="flex gap-1.5 md:hidden" aria-hidden="true">
           {steps.map((scene, index) => (

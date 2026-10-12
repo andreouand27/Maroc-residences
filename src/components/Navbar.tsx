@@ -11,7 +11,7 @@ export default function Navbar({ current, visible, onNavigate }: NavbarProps) {
   return (
     <div
       inert={!visible}
-      className={`fixed inset-x-0 top-0 z-50 px-6 pt-[calc(1.5rem+var(--safe-top))] transition-[opacity,transform] duration-700 md:px-12 lg:px-16 ${
+      className={`fixed inset-x-0 top-0 z-50 px-6 pt-[calc(1.5rem+var(--safe-top))] transition-[opacity,transform] short:pt-[calc(0.75rem+var(--safe-top))] duration-700 md:px-12 lg:px-16 ${
         visible ? 'opacity-100' : 'pointer-events-none -translate-y-4 opacity-0'
       }`}
     >

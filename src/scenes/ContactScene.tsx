@@ -42,16 +42,16 @@ function ContactRow({ icon: Icon, label, value, href }: ContactRowProps) {
   const text = <span ref={valueRef}>{value}</span>
 
   return (
-    <div className="flex items-center gap-4 border-b border-white/10 py-3 md:py-4">
+    <div className="flex items-center gap-3 border-b border-white/10 py-2.5 sm:gap-4 md:py-4 short:py-2">
       <Icon className="h-5 w-5 shrink-0 text-taupe" strokeWidth={1.5} aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <p className="text-xs text-gray-300">{label}</p>
         {href ? (
-          <a href={href} className="block break-words transition-colors hover:text-gray-300 md:text-lg">
+          <a href={href} className="block break-words text-sm transition-colors hover:text-gray-300 sm:text-base md:text-lg">
             {text}
           </a>
         ) : (
-          <p className="break-words md:text-lg">{text}</p>
+          <p className="break-words text-sm sm:text-base md:text-lg">{text}</p>
         )}
       </div>
       <button
@@ -61,7 +61,8 @@ function ContactRow({ icon: Icon, label, value, href }: ContactRowProps) {
         className="flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs text-gray-300 transition-colors hover:text-white"
       >
         {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-        {copied ? 'Copied' : 'Copy'}
+        {/* Icon only on small phones, to leave room for the address. */}
+        <span className="hidden sm:inline">{copied ? 'Copied' : 'Copy'}</span>
       </button>
     </div>
   )
@@ -72,8 +73,8 @@ export default function ContactScene({ active }: { active: boolean }) {
     <div className="absolute inset-0">
       <SceneBackground image={images.entrance} position="40% center" />
       <div className={`${frame} justify-end lg:items-end lg:justify-center`}>
-        <div className="scene-float flex min-h-0 w-full max-w-xl flex-col">
-          <div className={`scene-panel ${glass} min-h-0 overflow-y-auto overscroll-contain p-6 md:p-8`}>
+        <div className="scene-float flex min-h-0 w-full max-w-xl flex-col short:max-w-3xl">
+          <div className={`scene-panel ${glass} min-h-0 overflow-y-auto overscroll-contain p-5 sm:p-6 md:p-8 short:p-4`}>
             <Eyebrow>Contact</Eyebrow>
             <AnimatedHeading
               as="h2"
@@ -83,18 +84,18 @@ export default function ContactScene({ active }: { active: boolean }) {
               initialDelay={250}
               charDelay={22}
               duration={900}
-              className="text-3xl font-normal md:text-5xl"
+              className="text-3xl font-normal md:text-5xl short:text-2xl"
               style={{ letterSpacing: '-0.04em' }}
             />
-            <p className="scene-item mt-4 text-gray-300 md:text-lg" style={order(3)}>
+            <p className="scene-item mt-4 text-sm text-gray-300 sm:text-base md:text-lg short:hidden" style={order(3)}>
               Call or email us and we’ll answer any questions about the apartments.
             </p>
-            <div className="scene-item mt-4 border-t border-white/10" style={order(4)}>
+            <div className="scene-item mt-4 border-t border-white/10 short:grid short:grid-cols-3 short:gap-x-4" style={order(4)}>
               <ContactRow icon={Phone} label="Phone" value={site.phone} href={site.phoneHref} />
               <ContactRow icon={Mail} label="Email" value={site.email} href={`mailto:${site.email}`} />
               <ContactRow icon={MapPin} label="Location" value={`${site.location}, ${site.country}`} />
             </div>
-            <p className="scene-item mt-4 text-xs text-gray-300" style={order(5)}>
+            <p className="scene-item mt-4 text-xs text-gray-300 short:hidden" style={order(5)}>
               © {year} {site.company}. Images are architectural renders.
             </p>
           </div>

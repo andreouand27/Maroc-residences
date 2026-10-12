@@ -28,19 +28,19 @@ export default function HeroScene({ active, onNavigate }: HeroSceneProps) {
       </SceneBackground>
 
       <div className="relative z-10 flex h-full flex-col">
-        <div className="flex flex-1 flex-col justify-end px-6 pb-[calc(3rem+var(--safe-bottom))] md:px-12 lg:px-16 lg:pb-[calc(4rem+var(--safe-bottom))]">
-          <div className="scene-float lg:grid lg:grid-cols-2 lg:items-end">
+        <div className="flex flex-1 flex-col justify-end px-6 pb-[calc(3.75rem+var(--safe-bottom))] md:px-12 md:pb-[calc(3rem+var(--safe-bottom))] lg:px-16 lg:pb-[calc(4rem+var(--safe-bottom))]">
+          <div className="scene-float lg:grid lg:grid-cols-2 lg:items-end short:grid short:grid-cols-[1fr_auto] short:items-end short:gap-6">
             {/* A soft shadow keeps the text readable over bright parts of the background. */}
             <div className="[text-shadow:0_2px_24px_rgba(0,0,0,0.4)]">
               <AnimatedHeading
                 text={'Your new home\nin Archangelos.'}
                 play={active}
-                className="mb-4 text-4xl font-normal md:text-5xl lg:text-6xl xl:text-7xl"
+                className="mb-4 text-4xl font-normal md:text-5xl lg:text-6xl xl:text-7xl short:mb-2 short:text-3xl"
                 style={{ letterSpacing: '-0.04em' }}
               />
 
               <FadeIn delay={800} duration={1000} play={active}>
-                <p className="mb-5 text-base text-gray-300 md:text-lg">
+                <p className="mb-5 text-base text-gray-300 md:text-lg short:mb-3 short:text-sm">
                   {site.project}. One and two-bedroom apartments in {site.location}, with covered parking for
                   every home.
                 </p>
@@ -66,7 +66,7 @@ export default function HeroScene({ active, onNavigate }: HeroSceneProps) {
               </FadeIn>
             </div>
 
-            <FadeIn delay={1400} duration={1000} play={active} className="mt-8 flex items-end justify-start lg:mt-0 lg:justify-end">
+            <FadeIn delay={1400} duration={1000} play={active} className="mt-8 flex items-end justify-start lg:mt-0 lg:justify-end short:mt-0">
               <div className="liquid-glass rounded-xl border border-white/20 px-6 py-3">
                 <p className="text-lg font-light md:text-xl lg:text-2xl">8 apartments. All available.</p>
               </div>

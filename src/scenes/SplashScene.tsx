@@ -17,14 +17,14 @@ export default function SplashScene({ onEnter }: SplashSceneProps) {
         aria-hidden="true"
       />
 
-      <div data-splash-logo className="relative flex flex-col items-center">
+      <h1 data-splash-logo className="relative flex flex-col items-center">
         <div className="relative">
           <img
             src="images/logo-mark.webp"
             alt=""
             width={808}
             height={513}
-            className="splash-mark h-auto w-[min(58vw,330px)]"
+            className="splash-mark h-auto w-[min(58vw,330px)] short:w-[200px]"
           />
           <span className="splash-scan" aria-hidden="true" />
         </div>
@@ -33,9 +33,9 @@ export default function SplashScene({ onEnter }: SplashSceneProps) {
           alt="Maroc Residences"
           width={967}
           height={229}
-          className="splash-word mt-5 h-auto w-[min(70vw,400px)]"
+          className="splash-word mt-5 h-auto w-[min(70vw,400px)] short:mt-3 short:w-[260px]"
         />
-      </div>
+      </h1>
 
       <button
         type="button"
@@ -43,7 +43,7 @@ export default function SplashScene({ onEnter }: SplashSceneProps) {
           event.stopPropagation()
           onEnter()
         }}
-        className="splash-prompt liquid-glass relative mt-14 rounded-full border border-white/20 px-6 py-3 text-sm transition-colors hover:bg-white/15"
+        className="splash-prompt liquid-glass relative mt-14 rounded-full short:mt-6 border border-white/20 px-6 py-3 text-sm transition-colors hover:bg-white/15"
       >
         <span className="splash-pulse flex items-center gap-2 [@media(pointer:coarse)]:hidden">
           Press <Key>Enter</Key> or <Key>Space</Key> to enter

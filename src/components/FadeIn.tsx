@@ -25,6 +25,7 @@ export default function FadeIn({ children, delay = 0, duration = 1000, play = tr
 
   return (
     <div
+      inert={!visible}
       className={`fade-in transition-opacity ${visible ? 'opacity-100' : 'opacity-0'} ${className}`}
       style={{ transitionDuration: `${duration}ms` }}
     >

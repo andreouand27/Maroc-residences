@@ -24,7 +24,7 @@ export default function ProjectScene({ active }: { active: boolean }) {
       <SceneBackground image={images.streetCorner} />
       <div className={`${frame} justify-end lg:justify-center`}>
         <div className="scene-float flex min-h-0 w-full max-w-xl flex-col">
-          <div className={`scene-panel ${glass} min-h-0 overflow-y-auto overscroll-contain p-6 md:p-8`}>
+          <div className={`scene-panel ${glass} min-h-0 overflow-y-auto overscroll-contain p-5 md:p-8 short:p-4`}>
             <Eyebrow>The project · {site.location}</Eyebrow>
             <AnimatedHeading
               as="h2"
@@ -34,18 +34,23 @@ export default function ProjectScene({ active }: { active: boolean }) {
               initialDelay={250}
               charDelay={22}
               duration={900}
-              className="text-3xl font-normal md:text-5xl"
+              className="text-3xl font-normal md:text-5xl short:text-2xl"
               style={{ letterSpacing: '-0.04em' }}
             />
-            <p className="scene-item mt-5 text-base text-gray-300 md:text-lg" style={order(3)}>
+            <p className="scene-item mt-5 text-base text-gray-300 md:text-lg short:hidden" style={order(3)}>
               A small building of just {totalApartments} apartments. Two floors of homes are raised on columns above
-              covered parking, with deep balconies, glass railings and sliding metal screens for shade and privacy.
+              covered parking
+              {/* Shortened on small phones; the features scene covers these too. */}
+              <span className="hidden sm:inline">
+                , with deep balconies, glass railings and sliding metal screens for shade and privacy
+              </span>
+              .
             </p>
-            <dl className="mt-6 grid grid-cols-2 gap-3">
+            <dl className="mt-6 grid grid-cols-2 gap-3 short:mt-4 short:grid-cols-4 short:gap-2">
               {facts.map((fact, index) => (
                 <div
                   key={fact.label}
-                  className="scene-item rounded-xl border border-white/10 bg-white/5 p-3 md:p-4"
+                  className="scene-item rounded-xl border border-white/10 bg-white/5 p-2.5 md:p-4 short:p-2.5"
                   style={order(4 + index)}
                 >
                   <dt className="text-xs text-gray-300">{fact.label}</dt>

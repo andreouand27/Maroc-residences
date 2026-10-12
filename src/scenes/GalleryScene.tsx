@@ -43,9 +43,9 @@ export default function GalleryScene({ index, previous, direction, onSelect, onS
 
       <div className={`${frame} justify-between gap-6`}>
         <div className="scene-float self-start">
-          <div className={`scene-panel ${glass} max-w-md p-5 md:p-6`}>
+          <div className={`scene-panel ${glass} max-w-md p-5 md:p-6 short:p-3`}>
             <Eyebrow>Gallery · Architectural renders</Eyebrow>
-            <p className="scene-item text-base md:text-xl" style={order(1)} aria-live="polite">
+            <p className="scene-item text-base md:text-xl short:text-sm" style={order(1)} aria-live="polite">
               <span className="mr-2 tabular-nums text-taupe">
                 {index + 1} / {gallery.length}
               </span>
@@ -66,7 +66,7 @@ export default function GalleryScene({ index, previous, direction, onSelect, onS
                 onClick={() => onSelect(itemIndex)}
                 aria-label={`Show picture ${itemIndex + 1}: ${item.alt}`}
                 aria-current={itemIndex === index ? 'true' : undefined}
-                className={`h-12 w-[4.5rem] shrink-0 overflow-hidden rounded-lg transition-[opacity,box-shadow] duration-300 md:h-16 md:w-24 ${
+                className={`h-12 w-[4.5rem] shrink-0 overflow-hidden rounded-lg transition-[opacity,box-shadow] duration-300 md:h-16 md:w-24 short:h-10 short:w-16 ${
                   itemIndex === index ? 'opacity-100 ring-2 ring-inset ring-white' : 'opacity-50 hover:opacity-100'
                 }`}
               >

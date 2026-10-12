@@ -18,24 +18,28 @@ export type EffectContext = {
   direction: Direction
   /** Where the visitor clicked to start the transition, relative to the stage. */
   origin: { x: number; y: number } | null
-  /** Starts the incoming scene's own entrance animations. */
+  /** Starts the incoming scene's own entrance animations now. */
   reveal: () => void
+  /** Starts them after a delay; the caller clears the timer if the effect ends first. */
+  revealAfter: (ms: number) => void
   /** Element.animate with `fill: 'both'`, tracked so the caller can cancel it. */
   animate: (element: Element, keyframes: Keyframe[], options: KeyframeAnimationOptions) => Animation
 }
 
 type Effect = (ctx: EffectContext) => Promise<void>
 
+// The in-out curves start briskly on purpose: a steeper start feels like a
+// delay after pressing a key.
 const EASE = {
   out: 'cubic-bezier(0.22, 1, 0.36, 1)',
   in: 'cubic-bezier(0.55, 0, 1, 0.45)',
-  inOut: 'cubic-bezier(0.76, 0, 0.24, 1)',
-  expoIn: 'cubic-bezier(0.7, 0, 0.84, 0)',
-  circInOut: 'cubic-bezier(0.85, 0, 0.15, 1)',
+  inOut: 'cubic-bezier(0.55, 0, 0.15, 1)',
+  expoIn: 'cubic-bezier(0.6, 0, 0.8, 0.2)',
+  reveal: 'cubic-bezier(0.6, 0, 0.2, 1)',
 }
 
 /** Time the outgoing scene's text takes to fade before its picture breaks apart. */
-const LEAVE_MS = 240
+const LEAVE_MS = 180
 
 const TAUPE_SHADES = ['#b8aa98', '#8a7d6d', '#4a4138', '#141210']
 
@@ -66,7 +70,16 @@ function layer(styles: Partial<CSSStyleDeclaration>) {
   return element
 }
 
-type Snapshot = { src: string; position: string; left: number; top: number; width: number; height: number }
+type Snapshot = {
+  image: HTMLImageElement
+  /** The picture's box on screen, relative to the stage. */
+  left: number
+  top: number
+  width: number
+  height: number
+  /** object-position as fractions (0.5, 0.5 = centred). */
+  position: [number, number]
+}
 
 // Where a scene's background picture currently sits on screen, so pieces of it
 // can be redrawn exactly in place.
@@ -75,20 +88,23 @@ function snapshot(scene: HTMLElement, stage: HTMLElement): Snapshot | null {
   if (!image || !image.complete || image.naturalWidth === 0) return null
   const box = image.getBoundingClientRect()
   const origin = stage.getBoundingClientRect()
+  const [x = '50%', y = '50%'] = getComputedStyle(image).objectPosition.split(' ')
   return {
-    src: image.currentSrc || image.src,
-    position: getComputedStyle(image).objectPosition,
+    image,
     left: box.left - origin.left,
     top: box.top - origin.top,
     width: box.width,
     height: box.height,
+    position: [parseFloat(x) / 100, parseFloat(y) / 100],
   }
 }
 
 type Box = { left: number; top: number; width: number; height: number }
 
-// A rectangular piece of the scene's picture: `outer` clips, `inner` holds the
-// full picture offset so the piece shows its own part of it.
+// A rectangular piece of the scene's picture. It is drawn onto a canvas from the
+// already-decoded <img>, so it is ready on the very first frame; a CSS
+// background copy can paint blank for a frame or two while it decodes.
+// `outer` clips and moves; `inner` (the canvas) can be stretched inside it.
 function piece(shot: Snapshot | null, box: Box) {
   const outer = layer({
     left: `${box.left}px`,
@@ -96,19 +112,33 @@ function piece(shot: Snapshot | null, box: Box) {
     width: `${box.width}px`,
     height: `${box.height}px`,
     overflow: 'hidden',
+    background: '#000',
     willChange: 'transform, opacity',
   })
-  const inner = shot
-    ? layer({
-        left: `${shot.left - box.left}px`,
-        top: `${shot.top - box.top}px`,
-        width: `${shot.width}px`,
-        height: `${shot.height}px`,
-        backgroundImage: `url("${shot.src}")`,
-        backgroundSize: 'cover',
-        backgroundPosition: shot.position,
-      })
-    : layer({ inset: '0', background: '#000' })
+  const ratio = Math.min(window.devicePixelRatio || 1, 2)
+  const inner = document.createElement('canvas')
+  inner.width = Math.max(1, Math.round(box.width * ratio))
+  inner.height = Math.max(1, Math.round(box.height * ratio))
+  Object.assign(inner.style, { position: 'absolute', inset: '0', width: '100%', height: '100%' })
+  const context = inner.getContext('2d')
+  if (shot && context) {
+    // Same maths as object-fit: cover with the picture's object-position.
+    const { image } = shot
+    const scale = Math.max(shot.width / image.naturalWidth, shot.height / image.naturalHeight)
+    const imageLeft = shot.left + (shot.width - image.naturalWidth * scale) * shot.position[0]
+    const imageTop = shot.top + (shot.height - image.naturalHeight * scale) * shot.position[1]
+    context.drawImage(
+      image,
+      (box.left - imageLeft) / scale,
+      (box.top - imageTop) / scale,
+      box.width / scale,
+      box.height / scale,
+      0,
+      0,
+      inner.width,
+      inner.height,
+    )
+  }
   outer.appendChild(inner)
   return { outer, inner }
 }
@@ -138,7 +168,7 @@ function rings(ctx: EffectContext, x: number, y: number, radius: number, timing:
 
 // Splash ⇄ scene: fly into the logo while the scene opens out of it.
 const portal: Effect = async (ctx) => {
-  const { stage, from, to, fromId, animate, reveal } = ctx
+  const { stage, from, to, fromId, animate, revealAfter } = ctx
   const { width, height } = size(stage)
   const entering = fromId === 'splash'
   const splash = entering ? from : to
@@ -159,7 +189,7 @@ const portal: Effect = async (ctx) => {
   const animations: Animation[] = []
 
   if (entering) {
-    const timing = { duration: 1300, delay: 350, easing: EASE.circInOut }
+    const timing = { duration: 1300, delay: 250, easing: EASE.reveal }
     animations.push(animate(scene, [{ clipPath: circle(0) }, { clipPath: circle(radius) }], timing))
     if (logo) {
       animations.push(
@@ -169,7 +199,7 @@ const portal: Effect = async (ctx) => {
             { transform: 'scale(1)', opacity: 1 },
             { transform: 'scale(16)', opacity: 0 },
           ],
-          { duration: 1500, easing: EASE.expoIn },
+          { duration: 1400, easing: EASE.expoIn },
         ),
       )
     }
@@ -177,15 +207,15 @@ const portal: Effect = async (ctx) => {
       animations.push(
         animate(motion, [{ transform: 'scale(1.6)' }, { transform: 'none' }], {
           duration: 2100,
-          delay: 350,
+          delay: 250,
           easing: EASE.out,
         }),
       )
     }
     animations.push(...rings(ctx, x, y, radius, timing))
-    setTimeout(reveal, 1250)
+    revealAfter(1250)
   } else {
-    const timing = { duration: 1200, easing: EASE.circInOut }
+    const timing = { duration: 1200, easing: EASE.reveal }
     animations.push(animate(scene, [{ clipPath: circle(radius) }, { clipPath: circle(0) }], timing))
     if (motion) animations.push(animate(motion, [{ transform: 'none' }, { transform: 'scale(1.4)' }], timing))
     if (logo) {
@@ -200,14 +230,14 @@ const portal: Effect = async (ctx) => {
         ),
       )
     }
-    setTimeout(reveal, 900)
+    revealAfter(900)
   }
   await settle(animations)
 }
 
 // The picture splits into vertical blinds that sweep away in a wave.
 const blinds: Effect = async (ctx) => {
-  const { stage, overlay, from, to, direction, animate, reveal } = ctx
+  const { stage, overlay, from, to, direction, animate, revealAfter } = ctx
   const { width, height } = size(stage)
   from.style.zIndex = '20'
   to.style.zIndex = '10'
@@ -235,7 +265,7 @@ const blinds: Effect = async (ctx) => {
     inner.style.transformOrigin = direction > 0 ? '50% 100%' : '50% 0%'
     overlay.appendChild(outer)
     const order = direction > 0 ? index : count - 1 - index
-    const timing = { duration: 1050, delay: order * 65, easing: EASE.inOut }
+    const timing = { duration: 1000, delay: order * 55, easing: EASE.inOut }
     animations.push(
       animate(outer, [{ transform: 'translate3d(0, 0, 0)' }, { transform: `translate3d(0, ${-direction * 110}%, 0)` }], timing),
       animate(
@@ -249,20 +279,20 @@ const blinds: Effect = async (ctx) => {
     )
   }
   from.style.visibility = 'hidden'
-  setTimeout(reveal, 750)
+  revealAfter(750)
   await settle(animations)
 }
 
 // The next scene opens in a circle from where the visitor clicked (or the centre).
 const iris: Effect = async (ctx) => {
-  const { stage, from, to, direction, origin, animate, reveal } = ctx
+  const { stage, from, to, direction, origin, animate, revealAfter } = ctx
   const { width, height } = size(stage)
   const x = origin?.x ?? width / 2
   const y = origin?.y ?? height / 2
   const radius = farthestCorner(x, y, width, height)
   from.style.zIndex = '10'
   to.style.zIndex = '20'
-  const timing = { duration: 1350, easing: EASE.circInOut }
+  const timing = { duration: 1300, easing: EASE.reveal }
   const animations = [
     animate(
       to,
@@ -288,13 +318,13 @@ const iris: Effect = async (ctx) => {
       }),
     )
   }
-  setTimeout(reveal, 800)
+  revealAfter(800)
   await settle(animations)
 }
 
 // The picture cracks into tiles that burst towards the viewer.
 const shatter: Effect = async (ctx) => {
-  const { stage, overlay, from, to, direction, animate, reveal } = ctx
+  const { stage, overlay, from, to, direction, animate, revealAfter } = ctx
   const { width, height } = size(stage)
   from.style.zIndex = '20'
   to.style.zIndex = '10'
@@ -343,11 +373,17 @@ const shatter: Effect = async (ctx) => {
         animate(
           outer,
           [
-            { transform: 'translate3d(0, 0, 0) scale(1)', opacity: 1 },
-            { offset: 0.12, transform: 'translate3d(0, 0, 20px) scale(0.94)', opacity: 1 },
+            // Crack apart quickly, then accelerate away.
+            { transform: 'translate3d(0, 0, 0) scale(1)', opacity: 1, easing: 'ease-out' },
+            {
+              offset: 0.15,
+              transform: 'translate3d(0, 0, 20px) scale(0.94)',
+              opacity: 1,
+              easing: 'cubic-bezier(0.5, 0, 0.75, 0)',
+            },
             { transform: `translate3d(${tx}px, ${ty}px, ${tz}px) ${spin} scale(0.5)`, opacity: 0 },
           ],
-          { duration: 1250, delay: distance * 240, easing: 'cubic-bezier(0.5, 0, 0.75, 0)' },
+          { duration: 1250, delay: distance * 240 },
         ),
       )
     }
@@ -358,13 +394,13 @@ const shatter: Effect = async (ctx) => {
     animate(flash, [{ opacity: 0 }, { offset: 0.25, opacity: 0.3 }, { opacity: 0 }], { duration: 450, easing: 'ease-out' }),
   )
   from.style.visibility = 'hidden'
-  setTimeout(reveal, 850)
+  revealAfter(850)
   await settle(animations)
 }
 
 // Both scenes turn as two faces of a cube.
 const cube: Effect = async (ctx) => {
-  const { stage, from, to, direction, animate, reveal } = ctx
+  const { stage, from, to, direction, animate, revealAfter } = ctx
   const { width } = size(stage)
   stage.style.perspective = `${Math.max(1200, width * 1.4)}px`
   for (const scene of [from, to]) {
@@ -395,13 +431,13 @@ const cube: Effect = async (ctx) => {
       timing,
     ),
   ]
-  setTimeout(reveal, 1000)
+  revealAfter(1000)
   await settle(animations)
 }
 
 // Panels in the logo's taupe tones sweep across, the logo mark shows, and they sweep away.
 const curtain: Effect = async (ctx) => {
-  const { overlay, from, to, direction, animate, reveal } = ctx
+  const { overlay, from, to, direction, animate, revealAfter } = ctx
   from.style.zIndex = '20'
   to.style.zIndex = '10'
   const panels = TAUPE_SHADES.map((color) => {
@@ -445,13 +481,13 @@ const curtain: Effect = async (ctx) => {
     }),
   )
   if (motion) animations.push(animate(motion, [{ transform: 'scale(1.25)' }, { transform: 'none' }], { duration: 1600, easing: EASE.out }))
-  setTimeout(reveal, 350)
+  revealAfter(350)
   await settle(animations)
 }
 
 // Light-speed jump: streaks fly past while one scene rushes away and the next arrives.
 const warp: Effect = async (ctx) => {
-  const { stage, overlay, from, to, direction, animate, reveal } = ctx
+  const { stage, overlay, from, to, direction, animate, revealAfter } = ctx
   const { width, height } = size(stage)
   from.style.zIndex = '10'
   to.style.zIndex = '20'
@@ -501,7 +537,7 @@ const warp: Effect = async (ctx) => {
       ),
     )
   }
-  setTimeout(reveal, 1300)
+  revealAfter(1300)
   await settle(animations)
 }
 
